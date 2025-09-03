@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Patintero - Larong Pinoy</title>
+  <style>
+    body { text-align: center; background: #f0f0f0; }
+    canvas { background: white; display: block; margin: 20px auto; border: 3px solid black; }
+    h2 { font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <h2>Patintero - Larong Pinoy</h2>
+  <p>Use arrow keys ↑ ↓ ← → to move. Avoid the blockers!</p>
+  <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const rows = 10, cols = 10;
+    const cell = canvas.width / cols;
+
+    // Player
+    let player = { row: rows-1, col: Math.floor(cols/2) };
+
+    // Blockers - now full-line blockers
+    let blockers = [];
+    for (let r = 2; r < rows; r += 3) { 
+      blockers.push({
+        row: r,
+        x: 0,
+        dir: 1,
+        width: 3   // width of the blocker (covers 3 cells)
+      });
+    }
+
+    // Controls
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowUp" && player.row > 0) player.row--;
+      if (e.key === "ArrowDown" && player.row < rows-1) player.row++;
+      if (e.key === "ArrowLeft" && player.col > 0) player.col--;
+      if (e.key === "ArrowRight" && player.col < cols-1) player.col++;
+    });
+
+    function moveBlockers() {
+      blockers.forEach(b => {
+        b.x += b.dir;
+        if (b.x <= 0 || b.x + b.width >= cols) b.dir *= -1;
+      });
+    }
+
+    function checkCollision() {
+      for (let b of blockers) {
+        if (player.row === b.row) {
+          if (player.col >= b.x && player.col < b.x + b.width) {
+            alert("Game Over!");
+            document.location.reload();
+          }
+        }
+      }
+    }
+
+    function checkWin() {
+      if (player.row === 0) {
+        alert("You Win!");
+        document.location.reload();
+      }
+    }
+
+    function drawGrid() {
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += cell) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= canvas.height; y += cell) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Draw thick horizontal lines (Patintero court)
+      ctx.strokeStyle = "green";
+      ctx.lineWidth = 3;
+      for (let y = cell*2; y < canvas.height; y += cell*3) {
+        ctx.beginPath();
+        ctx.moveTo(0, y + cell/2);
+        ctx.lineTo(canvas.width, y + cell/2);
+        ctx.stroke();
+      }
+    }
+
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGrid();
+
+      // Player (blue)
+      ctx.fillStyle = "blue";
+      ctx.fillRect(player.col*cell, player.row*cell, cell, cell);
+
+      // Blockers (red bars)
+      ctx.fillStyle = "red";
+      blockers.forEach(b => {
+        ctx.fillRect(b.x*cell, b.row*cell, b.width*cell, cell);
+      });
+    }
+
+    function gameLoop() {
+      moveBlockers();
+      checkCollision();
+      checkWin();
+      drawGame();
+    }
+
+    setInterval(gameLoop, 400); // speed
+  </script>
+</body>
+</html>
